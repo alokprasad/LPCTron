@@ -13,12 +13,12 @@ Thanks to https://github.com/MlWoo/ for most of changes
 
 python3 preprocess.py --base_dir /media/alok/ws/sandbox/lpc_tacatron2/dataset --dataset LJSpeech-1.1
 this will generate /dataset/training_data folder 
-
+```
 ├── training_data (1)
 │   ├── audio (*)
 │   ├── linear
 │   └── mels
-
+```
 * this is replaced by script for training to be used by LPCNET
 
 ## Training LPCNET with LJPSpeech
