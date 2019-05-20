@@ -28,12 +28,8 @@ this will generate /dataset/training_data folder
 Since Tacatron2 is trained with LPSpeech its good idea to train with Same data. LPCNET uses a single Merged PCM 
 for training. So you need to remove wav headers from each file and merge them for training.
 
+===============================================================================
 
-
-
-
-
-============================================================================================================================
 
 sudo apt-get install python3-tk 
 
