@@ -55,8 +55,11 @@ apt-get install -y google-perftools
 LD_PRELOAD = /usr/lib/x86_64-linux-gnu/libtcmalloc.so.4
 
 python3 train.py --input_dir ../dataset/training_data --tacotron_input ../dataset/training_data/train.txt --model='Tacotron'
+
 python3 synthesize.py --model='Tacotron' --mode='eval'
+
 ./test_lpcnet f32_for_lpcnet.f32 test.s16
+
 ffmpeg -f s16le -ar 16k -ac 1 -i test.s16 test-out.wav
 
 
