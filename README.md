@@ -18,6 +18,9 @@ this will generate /dataset/training_data folder
 │   ├── audio (*)
 │   ├── linear
 │   └── mels
+    └── train.txt
+
+*all three folder contain npy array, train.txt contains text for each audio.
 ```
 * this is replaced by script for training to be used by LPCNET
 
