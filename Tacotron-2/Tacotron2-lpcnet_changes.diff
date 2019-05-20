@@ -1,0 +1,292 @@
+diff --git a/Tacotron2-lpcnet_changes.diff b/Tacotron2-lpcnet_changes.diff
+new file mode 100644
+index 0000000..9ca4b46
+--- /dev/null
++++ b/Tacotron2-lpcnet_changes.diff
+@@ -0,0 +1,284 @@
+diff --git a/datasets/lpcnet15_384_10_G16_100.h5 b/datasets/lpcnet15_384_10_G16_100.h5
+new file mode 100644
+index 0000000..772ab5a
+Binary files /dev/null and b/datasets/lpcnet15_384_10_G16_100.h5 differ
+diff --git a/datasets/preprocessor.py b/datasets/preprocessor.py
+index d431526..63683b0 100644
+--- a/datasets/preprocessor.py
++++ b/datasets/preprocessor.py
+@@ -33,14 +33,15 @@ def build_from_path(hparams, input_dirs, mel_dir, linear_dir, wav_dir, n_jobs=12
+             for line in f:
+                 parts = line.strip().split('|')
+                 wav_path = os.path.join(input_dir, 'wavs', '{}.wav'.format(parts[0]))
++                wavfile = parts[0]
+                 text = parts[2]
+-                futures.append(executor.submit(partial(_process_utterance, mel_dir, linear_dir, wav_dir, index, wav_path, text, hparams)))
++                futures.append(executor.submit(partial(_process_utterance, mel_dir, linear_dir, wav_dir, wavfile, index, wav_path, text, hparams)))
+                 index += 1
+ 
+     return [future.result() for future in tqdm(futures) if future.result() is not None]
+ 
+ 
+-def _process_utterance(mel_dir, linear_dir, wav_dir, index, wav_path, text, hparams):
++def _process_utterance(mel_dir, linear_dir, wav_dir, wavfile , index, wav_path, text, hparams):
+     """
+     Preprocesses a single utterance wav/text pair
+ 
+@@ -130,12 +131,15 @@ def _process_utterance(mel_dir, linear_dir, wav_dir, index, wav_path, text, hpar
+     time_steps = len(out)
+ 
+     # Write the spectrogram and audio to disk
+-    audio_filename = 'speech-audio-{:05d}.npy'.format(index)
+-    mel_filename = 'speech-mel-{:05d}.npy'.format(index)
+-    linear_filename = 'speech-linear-{:05d}.npy'.format(index)
++    audio_filename = 'audio-{}.npy'.format(wavfile)
++    mel_filename = 'mel-{}.npy'.format(wavfile)
++    linear_filename = 'linear-{}.npy'.format(wavfile)
++
++
+     np.save(os.path.join(wav_dir, audio_filename), out.astype(out_dtype), allow_pickle=False)
+     np.save(os.path.join(mel_dir, mel_filename), mel_spectrogram.T, allow_pickle=False)
+     np.save(os.path.join(linear_dir, linear_filename), linear_spectrogram.T, allow_pickle=False)
+ 
+     # Return a tuple describing this training example
+-    return (audio_filename, mel_filename, linear_filename, time_steps, mel_frames, text)
+\ No newline at end of file
++    return (audio_filename, mel_filename, linear_filename, time_steps, mel_frames, text)
++
+diff --git a/hparams.py b/hparams.py
+index a18bcd7..74d49c1 100644
+--- a/hparams.py
++++ b/hparams.py
+@@ -14,7 +14,7 @@ hparams = tf.contrib.training.HParams(
+     ###########################################################################################################################################
+ 
+     #Audio
+-    num_mels = 80, #Number of mel-spectrogram channels and local conditioning dimensionality
++    num_mels = 20, #Number of mel-spectrogram channels and local conditioning dimensionality
+     num_freq = 513, # (= n_fft / 2 + 1) only used when adding linear spectrograms post processing network
+     rescale = True, #Whether to rescale audio prior to preprocessing
+     rescaling_max = 0.999, #Rescaling value
+@@ -128,7 +128,7 @@ hparams = tf.contrib.training.HParams(
+     tacotron_random_seed = 5339, #Determines initial graph and operations (i.e: model) random state for reproducibility
+     tacotron_swap_with_cpu = False, #Whether to use cpu as support to gpu for decoder computation (Not recommended: may cause major slowdowns! Only use when critical!)
+ 
+-    tacotron_batch_size = 48, #number of training samples on each training steps
++    tacotron_batch_size = 24, #number of training samples on each training steps
+     tacotron_reg_weight = 1e-6, #regularization weight (for L2 regularization)
+     tacotron_scale_regularization = True, #Whether to rescale regularization weight to adapt for outputs range (used when reg_weight is high and biasing the model)
+ 
+@@ -137,8 +137,8 @@ hparams = tf.contrib.training.HParams(
+     tacotron_data_random_state=1234, #random state for train test split repeatability
+ 
+     tacotron_decay_learning_rate = True, #boolean, determines if the learning rate will follow an exponential decay
+-    tacotron_start_decay = 50000, #Step at which learning decay starts
+-    tacotron_decay_steps = 40000, #Determines the learning rate decay slope (UNDER TEST)
++    tacotron_start_decay = 5000, #Step at which learning decay starts
++    tacotron_decay_steps = 4000, #Determines the learning rate decay slope (UNDER TEST)
+     tacotron_decay_rate = 0.2, #learning rate decay rate (UNDER TEST)
+     tacotron_initial_learning_rate = 1e-3, #starting learning rate
+     tacotron_final_learning_rate = 1e-5, #minimal learning rate
+@@ -213,7 +213,7 @@ hparams = tf.contrib.training.HParams(
+     "The blue lagoon is a nineteen eighty American romance adventure film.",
+     "Tajima Airport serves Toyooka.",
+     'Talib Kweli confirmed to AllHipHop that he will be releasing an album in the next year.',
+-    #From Training data:
++    # From Training data:
+     'the rest being provided with barrack beds, and in dimensions varying from thirty feet by fifteen to fifteen feet by ten.',
+     'in giltspur street compter, where he was first lodged.',
+     'a man named burnett came with his wife and took up his residence at whitchurch, hampshire, at no great distance from laverstock,',
+@@ -233,4 +233,4 @@ hparams = tf.contrib.training.HParams(
+ def hparams_debug_string():
+     values = hparams.values()
+     hp = ['  %s: %s' % (name, values[name]) for name in sorted(values) if name != 'sentences']
+-    return 'Hyperparameters:\n' + '\n'.join(hp)
+\ No newline at end of file
++    return 'Hyperparameters:\n' + '\n'.join(hp)
+diff --git a/preprocess.sh b/preprocess.sh
+new file mode 100644
+index 0000000..2f7bae2
+--- /dev/null
++++ b/preprocess.sh
+@@ -0,0 +1,31 @@
++python3 preprocess.py --base_dir ../dataset --dataset LJSpeech-1.1
++#this generates dataset/training_data folder 
++#
++#├── training_data (1)
++#│   ├── audio
++#│   ├── linear
++#│   └── mels
++
++#Now use LPCNET dump_data to convert PCM to NPY and place it in audio 
++#Training TACATRON2 with lpcnet as Vocoder is not done with audio(dump_data PCM 0 and mels
++
++#wav->s16->to npy as meta[0] audio file
++#audio-LJ024-0006.npy 
++mkdir -p ../dataset/LJSpeech-1.1/pcms
++for i in ../dataset/LJSpeech-1.1/wavs/*.wav
++do sox $i -r 16000 -c 1 -t sw - > ../dataset/LJSpeech-1.1/pcms/audio-$(basename "$i" | cut -d. -f1).s16
++done
++
++#f32/npy
++mkdir -p ../dataset/LJSpeech-1.1/f32
++for i in ../dataset/LJSpeech-1.1/pcms/*.s16
++do
++#(dump_data compileted with taco=1)
++../LPCNet/dump_data -test $i ../dataset/LJSpeech-1.1/f32/$(basename "$i" | cut -d. -f1).npy
++done
++
++cp ../dataset/LJSpeech-1.1/f32/* ../dataset/training_data/audio/.
++#copy f32 npy files to training_data/audio
++
++#models path
++#/logs-Tacotron/taco_pretrained/*
+diff --git a/pretrained_model/checkpoint b/pretrained_model/checkpoint
+new file mode 100644
+index 0000000..bd375cc
+--- /dev/null
++++ b/pretrained_model/checkpoint
+@@ -0,0 +1,2 @@
++model_checkpoint_path: "tacotron_model.ckpt-57000"
++all_model_checkpoint_paths: "tacotron_model.ckpt-57000"
+diff --git a/pretrained_model/tacotron_model.ckpt-57000.data-00000-of-00001 b/pretrained_model/tacotron_model.ckpt-57000.data-00000-of-00001
+new file mode 100644
+index 0000000..a7687e0
+Binary files /dev/null and b/pretrained_model/tacotron_model.ckpt-57000.data-00000-of-00001 differ
+diff --git a/pretrained_model/tacotron_model.ckpt-57000.index b/pretrained_model/tacotron_model.ckpt-57000.index
+new file mode 100644
+index 0000000..009284f
+Binary files /dev/null and b/pretrained_model/tacotron_model.ckpt-57000.index differ
+diff --git a/pretrained_model/tacotron_model.ckpt-57000.meta b/pretrained_model/tacotron_model.ckpt-57000.meta
+new file mode 100644
+index 0000000..c60d11d
+Binary files /dev/null and b/pretrained_model/tacotron_model.ckpt-57000.meta differ
+diff --git a/synthesize.py b/synthesize.py
+index 7d92dd7..0022f66 100644
+--- a/synthesize.py
++++ b/synthesize.py
+@@ -1,6 +1,6 @@
+ import argparse
+ from tacotron.synthesize import tacotron_synthesize
+-from wavenet_vocoder.synthesize import wavenet_synthesize
++#from wavenet_vocoder.synthesize import wavenet_synthesize
+ from infolog import log
+ from hparams import hparams
+ from warnings import warn
+@@ -88,4 +88,4 @@ def main():
+ 
+ 
+ if __name__ == '__main__':
+-    main()
+\ No newline at end of file
++    main()
+diff --git a/tacotron/feeder.py b/tacotron/feeder.py
+index 3aef634..2db4be1 100644
+--- a/tacotron/feeder.py
++++ b/tacotron/feeder.py
+@@ -27,6 +27,7 @@ class Feeder:
+         # Load metadata
+         self._mel_dir = os.path.join(os.path.dirname(metadata_filename), 'mels')
+         self._linear_dir = os.path.join(os.path.dirname(metadata_filename), 'linear')
++        self._audio_dir = os.path.join(os.path.dirname(metadata_filename), 'audio')
+         with open(metadata_filename, encoding='utf-8') as f:
+             self._metadata = [line.strip().split('|') for line in f]
+             frame_shift_ms = hparams.hop_size / hparams.sample_rate
+@@ -119,10 +120,11 @@ class Feeder:
+         meta = self._test_meta[self._test_offset]
+         self._test_offset += 1
+ 
+-        text = meta[5]
++        text = meta[5]  #train.txt it is text sentences meta[0] = audio/f32 meta[1] = mel meta[2] = linear
+ 
+         input_data = np.asarray(text_to_sequence(text, self._cleaner_names), dtype=np.int32)
+-        mel_target = np.load(os.path.join(self._mel_dir, meta[1]))
++        mel_target = np.fromfile(os.path.join(self._audio_dir, meta[0]), dtype='float32')
++        mel_target = np.resize(mel_target, (-1, self._hparams.num_mels))
+         #Create parallel sequences containing zeros to represent a non finished sequence
+         token_target = np.asarray([0.] * (len(mel_target) - 1))
+         linear_target = np.load(os.path.join(self._linear_dir, meta[2]))
+@@ -186,7 +188,8 @@ class Feeder:
+         text = meta[5]
+ 
+         input_data = np.asarray(text_to_sequence(text, self._cleaner_names), dtype=np.int32)
+-        mel_target = np.load(os.path.join(self._mel_dir, meta[1]))
++        mel_target = np.fromfile(os.path.join(self._audio_dir, meta[0]), dtype='float32')
++        mel_target = np.resize(mel_target, (-1, self._hparams.num_mels))
+         #Create parallel sequences containing zeros to represent a non finished sequence
+         token_target = np.asarray([0.] * (len(mel_target) - 1))
+         linear_target = np.load(os.path.join(self._linear_dir, meta[2]))
+diff --git a/tacotron/models/custom_decoder.py b/tacotron/models/custom_decoder.py
+index caf0bdc..efc94b1 100644
+--- a/tacotron/models/custom_decoder.py
++++ b/tacotron/models/custom_decoder.py
+@@ -44,8 +44,8 @@ class CustomDecoder(decoder.Decoder):
+         Raises:
+             TypeError: if `cell`, `helper` or `output_layer` have an incorrect type.
+         """
+-        if not rnn_cell_impl._like_rnncell(cell):  # pylint: disable=protected-access
+-            raise TypeError("cell must be an RNNCell, received: %s" % type(cell))
++        #if not rnn_cell_impl._like_rnncell(cell):  # pylint: disable=protected-access
++        #    raise TypeError("cell must be an RNNCell, received: %s" % type(cell))
+         if not isinstance(helper, helper_py.Helper):
+             raise TypeError("helper must be a Helper, received: %s" % type(helper))
+         if (output_layer is not None
+@@ -136,4 +136,4 @@ class CustomDecoder(decoder.Decoder):
+                     stop_token_prediction=stop_token)
+ 
+         outputs = CustomDecoderOutput(cell_outputs, stop_token, sample_ids)
+-        return (outputs, next_state, next_inputs, finished)
+\ No newline at end of file
++        return (outputs, next_state, next_inputs, finished)
+diff --git a/tacotron/synthesize.py b/tacotron/synthesize.py
+index 90590fe..e91292f 100644
+--- a/tacotron/synthesize.py
++++ b/tacotron/synthesize.py
+@@ -8,7 +8,7 @@ from tqdm import tqdm
+ from time import sleep
+ from infolog import log
+ import tensorflow as tf 
+-
++import numpy as np
+ 
+ 
+ def generate_fast(model, text):
+@@ -63,6 +63,10 @@ def run_eval(args, checkpoint_path, output_dir, hparams, sentences):
+             mel_filename = synth.synthesize(text, i+1, eval_dir, log_dir, None)
+ 
+             file.write('{}|{}\n'.format(text, mel_filename))
++            npy_data = np.load(mel_filename)
++            npy_data = npy_data.reshape((-1,))
++            npy_data.tofile("f32_for_lpcnet.f32")
++		
+     log('synthesized mel spectrograms at {}'.format(eval_dir))
+     return eval_dir
+ 
+diff --git a/text.txt b/text.txt
+new file mode 100644
+index 0000000..641c0b5
+--- /dev/null
++++ b/text.txt
+@@ -0,0 +1 @@
++Printing, in the only sense with which we are at present concerned, differs from most if not from all the arts and crafts represented in the Exhibition.
+diff --git a/train.py b/train.py
+index 5f8143d..25d0068 100644
+--- a/train.py
++++ b/train.py
+@@ -97,11 +97,11 @@ def main():
+     parser.add_argument('--restore', type=bool, default=True, help='Set this to False to do a fresh training')
+     parser.add_argument('--summary_interval', type=int, default=250,
+         help='Steps between running summary ops')
+-    parser.add_argument('--checkpoint_interval', type=int, default=5000,
++    parser.add_argument('--checkpoint_interval', type=int, default=500,
+         help='Steps between writing checkpoints')
+     parser.add_argument('--eval_interval', type=int, default=10000,
+         help='Steps between eval on test data')
+-    parser.add_argument('--tacotron_train_steps', type=int, default=20000, help='total number of tacotron training steps')
++    parser.add_argument('--tacotron_train_steps', type=int, default=500000, help='total number of tacotron training steps')
+     parser.add_argument('--wavenet_train_steps', type=int, default=360000, help='total number of wavenet training steps')
+     parser.add_argument('--tf_log_level', type=int, default=1, help='Tensorflow C++ log level.')
+     args = parser.parse_args()
+@@ -124,4 +124,4 @@ def main():
+ 
+ 
+ if __name__ == '__main__':
+-    main()
+\ No newline at end of file
++    main()

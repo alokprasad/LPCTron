@@ -1,0 +1,47 @@
+diff --git a/preprocess.sh b/preprocess.sh
+new file mode 100644
+index 0000000..01bd0e2
+--- /dev/null
++++ b/preprocess.sh
+@@ -0,0 +1,19 @@
++#../dataset/LJSpeech-1.1/pcms
++
++mkdir -p ../dataset/LJSpeech-1.1/pcms
++for i in ../dataset/LJSpeech-1.1/wavs/*.wav
++do sox $i -r 16000 -c 1 -t sw - > ../dataset/LJSpeech-1.1/pcms/audio-$(basename "$i" | cut -d. -f1).s16
++done
++
++#merge all PCM to single file
++
++for i in ../dataset/LJSpeech-1.1/pcms/*.s16
++do 
++    cat "$i" >> final.pcm
++    echo $i
++done
++echo "Final.pcm created..."
++
++#make using make clean , make dump_data ( no taco=1 Flag)
++make clean && make dump_data
++./dump_data -train final.pcm features.f32 data.u8
+diff --git a/src/train_lpcnet.py b/src/train_lpcnet.py
+index d9fdddd..b19e672 100755
+--- a/src/train_lpcnet.py
++++ b/src/train_lpcnet.py
+@@ -42,15 +42,14 @@ config = tf.ConfigProto()
+ 
+ # use this option to reserve GPU memory, e.g. for running more than
+ # one thing at a time.  Best to disable for GPUs with small memory
+-config.gpu_options.per_process_gpu_memory_fraction = 0.44
++config.gpu_options.per_process_gpu_memory_fraction = 0
+ 
+ set_session(tf.Session(config=config))
+ 
+ nb_epochs = 120
+ 
+ # Try reducing batch_size if you run out of memory on your GPU
+-batch_size = 64
+-
++batch_size  = 64 
+ model, _, _ = lpcnet.new_lpcnet_model()
+ 
+ model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['sparse_categorical_accuracy'])
