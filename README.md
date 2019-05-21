@@ -3,9 +3,15 @@ Tacotron2 + LPCNET for complete End-to-End TTS System
 
 Thanks to https://github.com/MlWoo/ for most of changes
 
+
+## Quick Run
+
+Checkout the LPCTron , and run tts.sh it converts text_file ( Tacotron2/text.txt ) to test.wav 
+
+
 ## Steps of Integration
 
-* Checkout Tacatron2 (Was facing some sihttps://github.com/alokprasad/LPCTron/blob/master/Tacotron-2/Tacotron2-lpcnet_changes.diff
+* Checkout Tacatron2 (https://github.com/alokprasad/LPCTron/blob/master/Tacotron-2/Tacotron2-lpcnet_changes.diff)
 
 
 
