@@ -17,8 +17,12 @@ Checkout the LPCTron , and run tts.sh it converts text_file ( Tacotron2/text.txt
 
 ## Training Tacotron2 specially to be used by LPCNET vocoder ( Instead of Wavenet Vocoder)
 
+```
 python3 preprocess.py --base_dir /media/alok/ws/sandbox/lpc_tacatron2/dataset --dataset LJSpeech-1.1
+```
+
 this will generate /dataset/training_data folder 
+
 ```
 ├── training_data (1)
 │   ├── audio (*)
