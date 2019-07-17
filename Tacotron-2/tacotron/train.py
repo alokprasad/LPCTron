@@ -210,7 +210,7 @@ def train(log_dir, args, hparams):
                         linear_loss = sum(linear_losses) / len(linear_losses)
 
                         wav = audio.inv_linear_spectrogram(lin_p.T, hparams)
-                        audio.save_wav(wav, os.path.join(eval_wav_dir, 'step-{}-eval-waveform-linear.wav'.format(step)), sr=hparams.sample_rate)
+                        #audio.save_wav(wav, os.path.join(eval_wav_dir, 'step-{}-eval-waveform-linear.wav'.format(step)), sr=hparams.sample_rate)
                     else:
                         for i in tqdm(range(feeder.test_steps)):
                             eloss, before_loss, after_loss, stop_token_loss, mel_p, mel_t, t_len, align = sess.run(
@@ -230,14 +230,14 @@ def train(log_dir, args, hparams):
                     log('Saving eval log to {}..'.format(eval_dir))
                     #Save some log to monitor model improvement on same unseen sequence
                     wav = audio.inv_mel_spectrogram(mel_p.T, hparams)
-                    audio.save_wav(wav, os.path.join(eval_wav_dir, 'step-{}-eval-waveform-mel.wav'.format(step)), sr=hparams.sample_rate)
+                    #audio.save_wav(wav, os.path.join(eval_wav_dir, 'step-{}-eval-waveform-mel.wav'.format(step)), sr=hparams.sample_rate)
 
-                    plot.plot_alignment(align, os.path.join(eval_plot_dir, 'step-{}-eval-align.png'.format(step)),
-                        info='{}, {}, step={}, loss={:.5f}'.format(args.model, time_string(), step, eval_loss),
-                        max_len=t_len // hparams.outputs_per_step)
-                    plot.plot_spectrogram(mel_p, os.path.join(eval_plot_dir, 'step-{}-eval-mel-spectrogram.png'.format(step)),
-                        info='{}, {}, step={}, loss={:.5}'.format(args.model, time_string(), step, eval_loss), target_spectrogram=mel_t,
-                        max_len=t_len)
+                    #plot.plot_alignment(align, os.path.join(eval_plot_dir, 'step-{}-eval-align.png'.format(step)),
+                    #    info='{}, {}, step={}, loss={:.5f}'.format(args.model, time_string(), step, eval_loss),
+                    #    max_len=t_len // hparams.outputs_per_step)
+                    #plot.plot_spectrogram(mel_p, os.path.join(eval_plot_dir, 'step-{}-eval-mel-spectrogram.png'.format(step)),
+                    #    info='{}, {}, step={}, loss={:.5}'.format(args.model, time_string(), step, eval_loss), target_spectrogram=mel_t,
+                    #    max_len=t_len)
 
                     log('Eval loss for global step {}: {:.3f}'.format(step, eval_loss))
                     log('Writing eval summary!')
@@ -284,13 +284,13 @@ def train(log_dir, args, hparams):
                     audio.save_wav(wav, os.path.join(wav_dir, 'step-{}-wave-from-mel.wav'.format(step)), sr=hparams.sample_rate)
 
                     #save alignment plot to disk (control purposes)
-                    plot.plot_alignment(alignment, os.path.join(plot_dir, 'step-{}-align.png'.format(step)),
-                        info='{}, {}, step={}, loss={:.5f}'.format(args.model, time_string(), step, loss),
-                        max_len=target_length // hparams.outputs_per_step)
+                    #plot.plot_alignment(alignment, os.path.join(plot_dir, 'step-{}-align.png'.format(step)),
+                    #    info='{}, {}, step={}, loss={:.5f}'.format(args.model, time_string(), step, loss),
+                    #    max_len=target_length // hparams.outputs_per_step)
                     #save real and predicted mel-spectrogram plot to disk (control purposes)
-                    plot.plot_spectrogram(mel_prediction, os.path.join(plot_dir, 'step-{}-mel-spectrogram.png'.format(step)),
-                        info='{}, {}, step={}, loss={:.5}'.format(args.model, time_string(), step, loss), target_spectrogram=target,
-                        max_len=target_length)
+                    #plot.plot_spectrogram(mel_prediction, os.path.join(plot_dir, 'step-{}-mel-spectrogram.png'.format(step)),
+                    #    info='{}, {}, step={}, loss={:.5}'.format(args.model, time_string(), step, loss), target_spectrogram=target,
+                    #$    max_len=target_length)
                     log('Input at step {}: {}'.format(step, sequence_to_text(input_seq)))
 
             log('Tacotron training complete after {} global steps!'.format(args.tacotron_train_steps))

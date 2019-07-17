@@ -61,11 +61,9 @@ def run_eval(args, checkpoint_path, output_dir, hparams, sentences):
         for i, text in enumerate(tqdm(sentences)):
             start = time.time()
             mel_filename = synth.synthesize(text, i+1, eval_dir, log_dir, None)
-
-            file.write('{}|{}\n'.format(text, mel_filename))
-            npy_data = np.load(mel_filename)
-            npy_data = npy_data.reshape((-1,))
-            npy_data.tofile("f32_for_lpcnet.f32")
+            print("Features f32 file created for text")
+            end = time.time()
+            print(">>>>>LPCNet Feature to PCM Conversion time = {}".format(end-start))	    
 		
     log('synthesized mel spectrograms at {}'.format(eval_dir))
     return eval_dir
