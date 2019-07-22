@@ -34,6 +34,7 @@ hparams = tf.contrib.training.HParams(
     win_size = None, #For 22050Hz, 1100 ~= 50 ms (If None, win_size = n_fft)
     sample_rate = 22050, #22050 Hz (corresponding to ljspeech dataset)
     frame_shift_ms = None,
+    #frame_shift_ms = 12.5,
 
     #M-AILABS (and other datasets) trim params
     trim_fft_size = 512,
@@ -54,7 +55,7 @@ hparams = tf.contrib.training.HParams(
 
     #Griffin Lim
     power = 1.2, 
-    griffin_lim_iters = 60,
+    griffin_lim_iters = 30,
     ###########################################################################################################################################
 
     #Tacotron
@@ -77,7 +78,7 @@ hparams = tf.contrib.training.HParams(
     prenet_layers = [256, 256], #number of layers and number of units of prenet
     decoder_layers = 2, #number of decoder lstm layers
     decoder_lstm_units = 1024, #number of decoder lstm units on each layer
-    max_iters = 2500, #Max decoder steps during inference (Just for safety from infinite loop cases)
+    max_iters = 1000, #Max decoder steps during inference (Just for safety from infinite loop cases)
 
     postnet_num_layers = 5, #number of postnet convolutional layers
     postnet_kernel_size = (5, ), #size of postnet convolution filters for each layer
@@ -112,7 +113,7 @@ hparams = tf.contrib.training.HParams(
     skip_out_channels = 256,
     kernel_size = 3,
 
-    cin_channels = 80, #Set this to -1 to disable local conditioning, else it must be equal to num_mels!!
+    cin_channels = 20, #Set this to -1 to disable local conditioning, else it must be equal to num_mels!!
     upsample_conditional_features = True, #Whether to repeat conditional features or upsample them (The latter is recommended)
     upsample_scales = [16, 16], #prod(scales) should be equal to hop size
     freq_axis_kernel_size = 3,

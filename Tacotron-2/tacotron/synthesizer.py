@@ -59,11 +59,14 @@ class Synthesizer:
 
         mels = mels.reshape(-1, hparams.num_mels) #Thanks to @imdatsolak for pointing this out
 
-        mels = mels.reshape((-1,))
-
         #convert checkpoint to frozen model
         minimal_graph = tf.graph_util.convert_variables_to_constants(self.session, self.session.graph_def, ["model/inference/add"])
         tf.train.write_graph(minimal_graph, '.', 'inference_model.pb', as_text=False)
 
+        npy_data = mels.reshape((-1,))
+        print(mels)
+        print("==============================================")
+        print(npy_data)
+        npy_data.tofile("f32_for_lpcnet.f32")
 
         return

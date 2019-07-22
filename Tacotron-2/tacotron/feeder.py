@@ -73,7 +73,7 @@ class Feeder:
             # Create placeholders for inputs and targets. Don't specify batch size because we want
             # to be able to feed different batch sizes at eval time.
             self._placeholders = [
-            tf.placeholder(tf.int32, shape=(None, None), name='inputs'),
+            tf.placeholder(tf.int32, shape=(None,None), name='inputs'),
             tf.placeholder(tf.int32, shape=(None, ), name='input_lengths'),
             tf.placeholder(tf.float32, shape=(None, None, hparams.num_mels), name='mel_targets'),
             tf.placeholder(tf.float32, shape=(None, None), name='token_targets'),
