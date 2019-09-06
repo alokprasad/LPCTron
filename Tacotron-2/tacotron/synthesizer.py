@@ -67,6 +67,9 @@ class Synthesizer:
         print(mels)
         print("==============================================")
         print(npy_data)
-        npy_data.tofile("f32_for_lpcnet.f32")
+        text = text.replace (" ", "_")
+        text = text.replace ("?",".")
+        filename=text+'f32'
+        npy_data.tofile(filename)
 
         return
