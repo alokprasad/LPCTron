@@ -8,7 +8,7 @@ Thanks to https://github.com/MlWoo/ for most of changes
 librosa , tqdm , matplotlib, lws , unidecode , inflect, falcon, scipy , numpy, keras
 
 sudo apt-get install python-pyaudio
-
+sudo apt-get install portaudio19-dev
 
 ## Quick Run
 
