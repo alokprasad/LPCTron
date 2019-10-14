@@ -4,6 +4,12 @@ Tacotron2 + LPCNET for complete End-to-End TTS System
 Thanks to https://github.com/MlWoo/ for most of changes
 ( Check this issue Also https://github.com/MlWoo/LPCNet/issues/4)
 
+## Prerequisites
+librosa , tqdm , matplotlib, lws , unidecode , inflect, falcon, scipy , numpy, keras
+
+sudo apt-get install python-pyaudio
+sudo apt-get install portaudio19-dev
+
 ## Quick Run
 
 Checkout the LPCTron , and run tts.sh it converts text_file ( Tacotron2/text.txt ) to test.wav 

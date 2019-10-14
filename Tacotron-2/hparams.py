@@ -129,7 +129,7 @@ hparams = tf.contrib.training.HParams(
     tacotron_random_seed = 5339, #Determines initial graph and operations (i.e: model) random state for reproducibility
     tacotron_swap_with_cpu = False, #Whether to use cpu as support to gpu for decoder computation (Not recommended: may cause major slowdowns! Only use when critical!)
 
-    tacotron_batch_size = 24, #number of training samples on each training steps
+    tacotron_batch_size = 64, #number of training samples on each training steps
     tacotron_reg_weight = 1e-6, #regularization weight (for L2 regularization)
     tacotron_scale_regularization = True, #Whether to rescale regularization weight to adapt for outputs range (used when reg_weight is high and biasing the model)
 
@@ -138,11 +138,11 @@ hparams = tf.contrib.training.HParams(
     tacotron_data_random_state=1234, #random state for train test split repeatability
 
     tacotron_decay_learning_rate = True, #boolean, determines if the learning rate will follow an exponential decay
-    tacotron_start_decay = 5000, #Step at which learning decay starts
-    tacotron_decay_steps = 4000, #Determines the learning rate decay slope (UNDER TEST)
-    tacotron_decay_rate = 0.2, #learning rate decay rate (UNDER TEST)
+    tacotron_start_decay = 40000, #Step at which learning decay starts
+    tacotron_decay_steps = 18000, #Determines the learning rate decay slope (UNDER TEST)
+    tacotron_decay_rate = 0.5, #learning rate decay rate (UNDER TEST)
     tacotron_initial_learning_rate = 1e-3, #starting learning rate
-    tacotron_final_learning_rate = 1e-5, #minimal learning rate
+    tacotron_final_learning_rate = 1e-4, #minimal learning rate
 
     tacotron_adam_beta1 = 0.9, #AdamOptimizer beta1 parameter
     tacotron_adam_beta2 = 0.999, #AdamOptimizer beta2 parameter
@@ -164,7 +164,7 @@ hparams = tf.contrib.training.HParams(
     tacotron_teacher_forcing_init_ratio = 1., #initial teacher forcing ratio. Relevant if mode='scheduled'
     tacotron_teacher_forcing_final_ratio = 0., #final teacher forcing ratio. Relevant if mode='scheduled'
     tacotron_teacher_forcing_start_decay = 10000, #starting point of teacher forcing ratio decay. Relevant if mode='scheduled'
-    tacotron_teacher_forcing_decay_steps = 280000, #Determines the teacher forcing ratio decay slope. Relevant if mode='scheduled'
+    tacotron_teacher_forcing_decay_steps = 40000, #Determines the teacher forcing ratio decay slope. Relevant if mode='scheduled'
     tacotron_teacher_forcing_decay_alpha = 0., #teacher forcing ratio decay rate. Relevant if mode='scheduled'
     ###########################################################################################################################################
 
