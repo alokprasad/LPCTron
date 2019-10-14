@@ -1,6 +1,11 @@
 from keras import backend as K
 from keras.engine.topology import Layer
-from keras.layers import activations, initializers, regularizers, constraints, InputSpec
+import keras
+if keras.__version__ == '2.3.0':
+    from keras import regularizers,initializers,constraints
+    from keras.layers import Activation,InputSpec
+else:
+    from keras.layers import activations, initializers, regularizers, constraints, InputSpec
 import numpy as np
 import math
 

@@ -31,25 +31,26 @@ import lpcnet
 import sys
 import numpy as np
 from keras.optimizers import Adam
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import Callback
 from ulaw import ulaw2lin, lin2ulaw
 import keras.backend as K
 import h5py
-
+from keras.callbacks import TensorBoard
+import os as os
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 config = tf.ConfigProto()
 
 # use this option to reserve GPU memory, e.g. for running more than
 # one thing at a time.  Best to disable for GPUs with small memory
-config.gpu_options.per_process_gpu_memory_fraction = 0
+config.gpu_options.per_process_gpu_memory_fraction = 0.9
 
 set_session(tf.Session(config=config))
 
 nb_epochs = 120
 
 # Try reducing batch_size if you run out of memory on your GPU
-batch_size  = 64 
+batch_size  = 64
 model, _, _ = lpcnet.new_lpcnet_model()
 
 model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['sparse_categorical_accuracy'])
@@ -91,13 +92,77 @@ features[:,:,18:36] = 0
 periods = (.1 + 50*features[:,:,36:37]+100).astype('int16')
 
 in_data = np.concatenate([sig, pred], axis=-1)
-
 del sig
 del pred
 
-# dump models to disk as we go
-checkpoint = ModelCheckpoint('lpcnet20_384_10_G16_{epoch:02d}.h5')
+#save model
+class save_model(Callback):
+    def on_epoch_end(self, epoch, logs={}):
+        print("epoch %d completed .."%epoch)
+        if ((epoch+1) % 1) == 0:
+            #val_loss = logs['val_loss']
+            loss=logs['loss']
+            modelfile = "model_loss-%.3f_%d_.hdf5"%(loss,epoch)
+            #modelfile = 'model-ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5'
+            #modelfile =  "weights.{epoch:02d}-{val_loss:.2f}.hdf5"
+            model.save(modelfile)
+        #ModelCheckpoint(filepath='/tmp/newweightsi_{epoch:02d}.hdf5', monitor='acc',verbose=1, period=1 ,save_best_only=False,mode='max')
+        f= open("checkpoint","w+")
+        f1= open("checkpoint.log","a")
+        f1.write(modelfile)
+        f1.write("\n")
+        f.write(modelfile)
+        f.close()
+        f1.close()
+
+checkpoint = save_model()
+
+class TrainValTensorBoard(TensorBoard):
+    def __init__(self, log_dir='./logs', **kwargs):
+        # Make the original `TensorBoard` log to a subdirectory 'training'
+        training_log_dir = os.path.join(log_dir, 'training')
+        super(TrainValTensorBoard, self).__init__(training_log_dir, **kwargs)
+
+        # Log the validation metrics to a separate subdirectory
+        self.val_log_dir = os.path.join(log_dir, 'validation')
+
+    def set_model(self, model):
+        # Setup writer for validation metrics
+        self.val_writer = tf.summary.FileWriter(self.val_log_dir)
+        super(TrainValTensorBoard, self).set_model(model)
+
+    def on_epoch_end(self, epoch, logs=None):
+        # Pop the validation logs and handle them separately with
+        # `self.val_writer`. Also rename the keys so that they can
+        # be plotted on the same figure with the training metrics
+        logs = logs or {}
+        val_logs = {k.replace('val_', ''): v for k, v in logs.items() if k.startswith('val_')}
+        for name, value in val_logs.items():
+            summary = tf.Summary()
+            summary_value = summary.value.add()
+            summary_value.simple_value = value.item()
+            summary_value.tag = name
+            self.val_writer.add_summary(summary, epoch)
+        self.val_writer.flush()
+
+        # Pass the remaining logs to `TensorBoard.on_epoch_end`
+        logs = {k: v for k, v in logs.items() if not k.startswith('val_')}
+        super(TrainValTensorBoard, self).on_epoch_end(epoch, logs)
+
+    def on_train_end(self, logs=None):
+        super(TrainValTensorBoard, self).on_train_end(logs)
+        self.val_writer.close()
+
+adaptation = False
+if adaptation:
+    f= open("checkpoint","r")
+    latest_model = f.read().replace('\n', '')
+    model.load_weights(latest_model)
+    print("***Successfully loaded checkpoint %s"% latest_model)
+
 
 #model.load_weights('lpcnet9b_384_10_G16_01.h5')
 model.compile(optimizer=Adam(0.001, amsgrad=True, decay=5e-5), loss='sparse_categorical_crossentropy')
+#model.fit([in_data, in_exc, features, periods], out_exc, batch_size=batch_size, epochs=nb_epochs, validation_split=0.0, callbacks=[checkpoint, lpcnet.Sparsify(2000, 40000, 400, (0.05, 0.05, 0.2)),TrainValTensorBoard(histogram_freq = 5)])
+
 model.fit([in_data, in_exc, features, periods], out_exc, batch_size=batch_size, epochs=nb_epochs, validation_split=0.0, callbacks=[checkpoint, lpcnet.Sparsify(2000, 40000, 400, (0.05, 0.05, 0.2))])
